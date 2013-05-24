@@ -1,0 +1,242 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 15:26:15
+// ----------------------------------------------------
+// Description:
+//   Create chart of session data.
+//
+//   This is a standalone method, you can call this
+//   without the GUI.
+//
+//   Note that it DOES affect the selection for
+//   [ASSERT_Data].
+//
+//   This method is kinda big and could be broken up,
+//   but right now I only use the parts here so I see
+//   no reason to make it generic yet.
+// --[HEADEREND]---------------------------------------
+// TODO: add progress bar code for loops.  Maybe add it for the start and end calculations (e.g. 20% for each calc).
+C_LONGINT($1;$sessionID_l)
+C_POINTER($2;$startDate_d_p)
+C_POINTER($3;$endDate_d_p)
+C_POINTER($4;$startTime_h_p)
+C_POINTER($5;$endTime_h_p)
+C_POINTER($6;$interval_l_p)
+
+C_LONGINT($0;$error_l)
+
+C_LONGINT($i;$limit_l;$numMessageTypes_l;$totalMessages_l)
+C_LONGINT($interval_l;$startTime_l;$endTime_l;$numSlots_l;$currentSlot_l;$beginInterval_l)
+C_DATE($startDate_d;$endDate_d)
+C_TIME($startTime_h;$endTime_h;$beginInterval_h;$endInterval_h)
+C_TEXT($HighChartTitle_t;$HighChartSubTitle_t;$HighChartxAxisCategories_t;$HighChartSeriesObject_t)
+
+ARRAY LONGINT($messageTypeIDs_al;0)
+ARRAY TEXT($messageTypeNames_at;0)
+ARRAY TEXT($xAxis_at;0)
+ARRAY TEXT($HighChartSeriesData_at;0)
+
+$sessionID_l:=$1
+$startDate_d_p:=$2
+$endDate_d_p:=$3
+$startTime_h_p:=$4
+$endTime_h_p:=$5
+$interval_l_p:=$6
+
+QUERY([ASSERT_Data];[ASSERT_Data]_SessionID=$sessionID_l;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]LogEntryTime#?00:00:00?;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]LogEntryDate#!00/00/00!;*)
+QUERY([ASSERT_Data])
+
+If (Records in selection([ASSERT_Data])>0)
+
+
+//== Select message ID and name from message type table. =====================
+$error_l:=EXT_Open 
+If ($error_l=0)
+UTIL_ERR_HandlerInstall 
+Begin SQL
+SELECT categoryID, categoryName
+FROM ASSERT_EntryCategory
+ORDER BY categoryOrder ASC
+INTO :$messageTypeIDs_al, :$messageTypeNames_at;
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+If ($error_l=0)
+// Close external database.
+$error_l:=EXT_Close 
+Else 
+UTIL_ERR_ErrorMethod_t:=Current method name
+// Still close the external database if another problem
+// occurred but don't overwrite the error code.
+EXT_CloseIfError 
+End if 
+End if 
+
+
+If ($error_l=0)
+APPEND TO ARRAY($messageTypeIDs_al;0)
+APPEND TO ARRAY($messageTypeNames_at;"Other")
+$numMessageTypes_l:=Size of array($messageTypeIDs_al)
+//============================================================================
+
+
+//== Configure chart limits. =================================================
+If ($startDate_d_p->=!00/00/00!)
+
+ORDER BY([ASSERT_Data];[ASSERT_Data]LogEntryDate;>)
+$startDate_d:=[ASSERT_Data]LogEntryDate
+$startDate_d_p->:=$startDate_d
+Else 
+$startDate_d:=$startDate_d_p->
+End if 
+
+
+If ($endDate_d_p->=!00/00/00!)
+
+ORDER BY([ASSERT_Data];[ASSERT_Data]LogEntryDate;<)
+$endDate_d:=[ASSERT_Data]LogEntryDate
+$endDate_d_p->:=$endDate_d
+Else 
+$endDate_d:=$endDate_d_p->
+End if 
+
+
+If ($interval_l_p->=0)
+// Default to 15 minutes...this is totally arbitrary but I figure you'll typically look at 1 day's worth of data.
+$interval_l:=15*60
+$interval_l_p->:=$interval_l
+Else 
+$interval_l:=$interval_l_p->
+End if 
+
+If ($startTime_h_p->=?00:00:00?)
+
+// Floor of earliest time is the starting point.
+$startTime_h:=Min([ASSERT_Data]LogEntryTime)
+$startTime_l:=$startTime_h*1// Convert to seconds.
+$startTime_l:=$startTime_l-($startTime_l%($interval_l))// Floor to nearest interval.
+$startTime_h:=Time(Time string($startTime_l))// Convert back to time.
+$startTime_h_p->:=$startTime_h
+Else 
+$startTime_h:=$startTime_h_p->
+$startTime_l:=$startTime_h*1// Convert to seconds.
+End if 
+
+If ($endTime_h_p->=?00:00:00?)
+
+// Ceiling of latest time is the end point.
+$endTime_h:=Max([ASSERT_Data]LogEntryTime)
+$endTime_l:=$endTime_h*1// Convert to seconds.
+$endTime_l:=($endTime_l-($endTime_l%($interval_l))+$interval_l)// Ceiling to nearest interval.
+$endTime_h:=Time(Time string($endTime_l))// Convert back to time.
+$endTime_h_p->:=$endTime_h
+Else 
+$endTime_h:=$endTime_h_p->
+$endTime_l:=$endTime_h*1// Convert to seconds.
+End if 
+
+
+Case of 
+: ($endTime_h<$startTime_h)
+$error_l:=<>ERR_ASSERT_BadTime_l
+
+: ($endDate_d<$startDate_d)
+$error_l:=<>ERR_ASSERT_BadDate_l
+
+End case 
+
+
+//============================================================================
+
+If ($error_l=0)
+// TODO: this needs to be updated to support dates.
+
+// Figure out how many slots.
+$numSlots_l:=($endTime_l-$startTime_l)/$interval_l
+
+// First dimension is count of message types.
+// Second dimension is # of time slots in data set.
+ARRAY LONGINT($messageTypeData_2D_al;$numMessageTypes_l;$numSlots_l)
+
+$beginInterval_h:=$startTime_h
+$currentSlot_l:=1
+
+Repeat 
+APPEND TO ARRAY($xAxis_at;String($beginInterval_h))
+
+$beginInterval_l:=$beginInterval_h*1
+$endInterval_h:=Time(Time string($beginInterval_l+$interval_l))
+
+
+$limit_l:=Size of array($messageTypeIDs_al)
+For ($i;1;$limit_l)
+
+QUERY([ASSERT_Data];[ASSERT_Data]LogEntryDate>=$startDate_d;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]LogEntryDate<=$endDate_d;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]LogEntryTime>=$beginInterval_h;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]LogEntryTime<$endInterval_h;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]_SessionID=$sessionID_l;*)
+QUERY([ASSERT_Data]; & ;[ASSERT_Data]_CategoryID=$messageTypeIDs_al{$i};*)
+QUERY([ASSERT_Data])
+
+$totalMessages_l:=Records in selection([ASSERT_Data])
+
+$messageTypeData_2D_al{$i}{$currentSlot_l}:=$totalMessages_l
+End for 
+
+
+
+$beginInterval_h:=$endInterval_h
+$currentSlot_l:=$currentSlot_l+1
+
+Until ($beginInterval_h>=$endTime_h)
+
+
+
+
+// The HTML template expects the following values:
+//
+//   title: [ASSERT_Session]SessionName
+//   subtitle: [ASSERT_Session]LogFilePath
+//   xAxis: UTIL_JSON_ToArray ("categories";Is Text;->$xAxis_at)
+//   series: UTIL_JSON_ToArray ("series";Is LongInt;->$HighChartSeriesData_at)
+
+$HighChartTitle_t:=[ASSERT_Session]SessionName
+$HighChartSubTitle_t:=[ASSERT_Session]LogFilePath
+$HighChartSubTitle_t:=Replace string($HighChartSubTitle_t;"\\";"\\\\")// need to escape backslashes for some reason.
+
+$HighChartxAxisCategories_t:=UTIL_JSON_ToArray ("categories";Is Text ;->$xAxis_at)
+ARRAY TEXT($SeriesData_at;2)
+
+C_LONGINT($i;$limit_l)
+$limit_l:=Size of array($messageTypeNames_at)
+For ($i;1;$limit_l)
+$SeriesData_at{1}:="name: '"+$messageTypeNames_at{$i}+"'"
+$SeriesData_at{2}:=UTIL_JSON_ToArray ("data";Is LongInt ;->$messageTypeData_2D_al{$i})
+APPEND TO ARRAY($HighChartSeriesData_at;UTIL_JSON_ToObject (->$SeriesData_at))
+End for 
+
+$HighChartSeriesObject_t:=UTIL_JSON_ToArray ("series";Is LongInt ;->$HighChartSeriesData_at)
+
+C_TEXT($sourcePath_t;$destPath_t)
+C_BLOB($templateFile_b;$outputFile_b)
+
+$sourcePath_t:=Get 4D folder(HTML Root Folder )+"template.html"
+
+// TODO: get the session name based on the ID so that this method does not depend on a current [ASSERT_Session] record.
+$destPath_t:=ASSERT_CHART_GetChartFilePath ([ASSERT_Session]SessionName;$startDate_d;$endDate_d;$startTime_h;$endTime_h)
+
+// Create a folder to store charts.
+CREATE FOLDER($destPath_t;*)
+
+DOCUMENT TO BLOB($sourcePath_t;$templateFile_b)
+PROCESS 4D TAGS($templateFile_b;$outputFile_b)
+BLOB TO DOCUMENT($destPath_t;$outputFile_b)
+End if 
+End if 
+
+End if 
+
+$0:=$error_l

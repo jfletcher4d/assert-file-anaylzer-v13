@@ -1,0 +1,49 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 10/08/12, 16:39:35
+// ----------------------------------------------------
+// Description:
+//   Clean up after progress bar use is complete.
+//
+//   NOTE: I found that rapidly adding and removing a
+//   single progress bar was problematic with the 4D
+//   Progress component. 4D Progress wants to create and
+//   delete the whole window and sometimes it doesn't
+//   (it's asynchronous, unfortunately). So your code
+//   can end up thinking there's a progress window open
+//   when there isn't and vice versa.
+//
+//   Trying IDLE as an experiment to see if it helps.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$pos_l)
+
+C_LONGINT($4DProgressBarID_l)
+
+$pos_l:=$1
+
+$4DProgressBarID_l:=<>PROG_4DIDs_al{$pos_l}
+
+If ($4DProgressBarID_l#0)
+Progress QUIT ($4DProgressBarID_l)
+End if 
+
+DELETE FROM ARRAY(<>PROG_PIDs_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_IDs_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_4DIDs_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_Title_at;$pos_l)
+DELETE FROM ARRAY(<>PROG_Current_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_Total_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_Threshold_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_Progress_ar;$pos_l)
+DELETE FROM ARRAY(<>PROG_Message_at;$pos_l)
+DELETE FROM ARRAY(<>PROG_StartTime_al;$pos_l)
+DELETE FROM ARRAY(<>PROG_Close_af;$pos_l)
+
+// Need to deal with PROG_Displayed_f, set it back to false if
+// all progress bars have been closed.
+If (Size of array(<>PROG_4DIDs_al)=0)
+PROG_DISPLAYED_F:=False
+End if 
+
+IDLE

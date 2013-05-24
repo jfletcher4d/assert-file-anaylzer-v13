@@ -1,0 +1,71 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 15:50:46
+// ----------------------------------------------------
+// Description:
+//   When the form is loaded, generate a chart for the
+//   whole data range.
+//
+//   I may need to reconsider this depending on the
+//   size of the data set but it's pretty fast so far.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l;$error_l)
+
+C_TEXT(wa_ASSERT_SessionChart_t)
+C_LONGINT(ASSERT_ogInterval_l;ASSERT_intervalInSeconds_l;v_intervalInMinutes_l)
+C_DATE(ASSERT_ogStartDate_d;ASSERT_ogEndDate_d;v_startDate_d;v_endDate_d)
+C_TIME(ASSERT_ogStartTime_h;ASSERT_ogEndTime_h;v_startTime_h;v_endTime_h)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Load )
+
+ASSERT_ogInterval_l:=0
+ASSERT_intervalInSeconds_l:=0
+v_intervalInMinutes_l:=0
+ASSERT_ogStartDate_d:=!00/00/00!
+ASSERT_ogEndDate_d:=!00/00/00!
+v_startDate_d:=!00/00/00!
+v_endDate_d:=!00/00/00!
+ASSERT_ogStartTime_h:=?00:00:00?
+ASSERT_ogEndTime_h:=?00:00:00?
+v_startTime_h:=?00:00:00?
+v_endTime_h:=?00:00:00?
+
+// This method will also set the start, end, and interval proc vars.
+$error_l:=ASSERT_FORM_ShowChart (->ASSERT_ogStartDate_d;->ASSERT_ogEndDate_d;->ASSERT_ogStartTime_h;->ASSERT_ogEndTime_h;->ASSERT_ogInterval_l)
+
+If ($error_l=0)
+// Set up form objects.
+DatePicker SET MIN DATE ("v_startDate_d";ASSERT_ogStartDate_d)
+DatePicker SET MAX DATE ("v_startDate_d";ASSERT_ogEndDate_d)
+DatePicker SET WEEK FIRST DAY ("v_startDate_d";Sunday )
+
+DatePicker SET MIN DATE ("v_endDate_d";ASSERT_ogStartDate_d)
+DatePicker SET MAX DATE ("v_endDate_d";ASSERT_ogEndDate_d)
+DatePicker SET WEEK FIRST DAY ("v_endDate_d";Sunday )
+
+TimePicker SET MIN TIME ("v_startTime_h";ASSERT_ogStartTime_h)
+TimePicker SET MAX TIME ("v_startTime_h";ASSERT_ogEndTime_h)
+TimePicker SET STEP ("v_startTime_h";ASSERT_ogInterval_l)
+
+TimePicker SET MIN TIME ("v_endTime_h";ASSERT_ogStartTime_h)
+TimePicker SET MAX TIME ("v_endTime_h";ASSERT_ogEndTime_h)
+TimePicker SET STEP ("v_endTime_h";ASSERT_ogInterval_l)
+
+// Assign values afterwards, the TimePicker is especially buggy when you alter the interval.
+v_startDate_d:=ASSERT_ogStartDate_d
+v_endDate_d:=ASSERT_ogEndDate_d
+v_startTime_h:=ASSERT_ogStartTime_h
+v_endTime_h:=ASSERT_ogEndTime_h
+ASSERT_intervalInSeconds_l:=ASSERT_ogInterval_l// This is not a form object, just a process variable to track the interval in seconds for use with assert_chart_dochart.
+v_intervalInMinutes_l:=ASSERT_intervalInSeconds_l/60// This is the interval in minutes.
+Else 
+UTIL_ERR_HandleError ($error_l;Current method path;Current method name)
+CANCEL
+End if 
+
+End case 
+

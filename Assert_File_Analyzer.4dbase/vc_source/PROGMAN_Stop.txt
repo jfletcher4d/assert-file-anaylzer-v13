@@ -1,0 +1,9 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): jfletcher
+// Date and time: 03/14/13, 11:18:59
+// ----------------------------------------------------
+// Description:
+//   Stop stored procedure that monitors progress bars.
+// --[HEADEREND]---------------------------------------
+<>PROG_StopManager_f:=True

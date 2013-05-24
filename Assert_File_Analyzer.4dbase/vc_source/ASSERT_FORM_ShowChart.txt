@@ -1,0 +1,38 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 15:31:40
+// ----------------------------------------------------
+// Description:
+//   Generic method to create and load chart for current
+//   session.
+//
+//   This is a FORM METHOD. As such it relies on form
+//   objects that already exist and an [ASSERT_Session]
+//   record already loaded. DO NOT CALL THIS METHOD ON
+//   ITS OWN.
+// --[HEADEREND]---------------------------------------
+C_POINTER($1;$startDate_d_p)
+C_POINTER($2;$endDate_d_p)
+C_POINTER($3;$startTime_h_p)
+C_POINTER($4;$endTime_h_p)
+C_POINTER($5;$interval_l_p)
+
+C_LONGINT($0;$error_l)
+
+C_TEXT($destPath_t)
+
+$startDate_d_p:=$1
+$endDate_d_p:=$2
+$startTime_h_p:=$3
+$endTime_h_p:=$4
+$interval_l_p:=$5
+
+$error_l:=ASSERT_CHART_DoChart ([ASSERT_Session]SessionID;$startDate_d_p;$endDate_d_p;$startTime_h_p;$endTime_h_p;$interval_l_p)
+
+If ($error_l=0)
+$destPath_t:=ASSERT_CHART_GetChartFilePath ([ASSERT_Session]SessionName;$startDate_d_p->;$endDate_d_p->;$startTime_h_p->;$endTime_h_p->)
+UTIL_WA_OpenLocalFile (->wa_ASSERT_SessionChart_t;$destPath_t)
+End if 
+
+$0:=$error_l

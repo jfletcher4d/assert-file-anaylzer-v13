@@ -1,0 +1,98 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/19/13, 15:11:13
+// ----------------------------------------------------
+// Description:
+//   Startup code for external database.
+//
+//   External database is currently used to store
+//   category filters separate from the main data file
+//   so that the main data file (which can grow quite
+//   large) can be deleted as needed.
+//
+// --[HEADEREND]---------------------------------------
+C_LONGINT($error_l)
+C_TEXT($externalDataFolderName_t;$externalDataFolderPath_t;$externalDataFile_t)
+
+// These are used to set up the global vars.
+$externalDataFolderName_t:="DO_NOT_DELETE"
+$externalDataFolderPath_t:=Get 4D folder(Database Folder ;*)+$externalDataFolderName_t
+$externalDataFile_t:="assert_metadata"
+
+// Set up error handling module.
+UTIL_ERR_Startup 
+
+// Path to external database to store metadata.
+C_TEXT(<>EXT_DataFile_t)
+<>EXT_DataFile_t:=$externalDataFolderPath_t+Folder separator +$externalDataFile_t
+
+// ===================================================================================
+// Set up the external database.
+C_TEXT($statement_t)
+
+If (Test path name($externalDataFolderPath_t)#Is a folder )
+CREATE FOLDER($externalDataFolderPath_t)
+End if 
+
+If (Test path name(<>EXT_DataFile_t+".4db")#Is a document )
+
+// Create the database.
+$statement_t:="CREATE DATABASE IF NOT EXISTS DATAFILE '"+<>EXT_DataFile_t+"';"
+UTIL_ERR_HandlerInstall 
+Begin SQL
+EXECUTE IMMEDIATE :$statement_t;
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+
+
+// Connect to external database.
+If ($error_l=0)
+$error_l:=EXT_Open 
+End if 
+
+
+// Create preferences table.
+If ($error_l=0)
+UTIL_ERR_HandlerInstall 
+Begin SQL
+CREATE TABLE IF NOT EXISTS EXT_Prefs
+(
+   recordUID UUID NOT NULL UNIQUE AUTO_GENERATE,
+   prefName VARCHAR NOT NULL UNIQUE,
+   prefValue VARCHAR NOT NULL
+);
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+End if 
+
+
+// Create entry category table.
+// TODO: new field for...importance?
+// I want a way to hide uninteresting categories from the chart.
+// So the chart will have "normal" mode and "verbose" mode.
+If ($error_l=0)
+UTIL_ERR_HandlerInstall 
+Begin SQL
+CREATE TABLE IF NOT EXISTS ASSERT_EntryCategory
+(
+   recordUID UUID NOT NULL UNIQUE AUTO_GENERATE,
+   categoryID INT NOT NULL UNIQUE AUTO_INCREMENT,
+   categoryName VARCHAR(255) NOT NULL,
+   categoryPattern VARCHAR NOT NULL,
+   categoryOrder INT NOT NULL
+);
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+End if 
+
+If ($error_l=0)
+// Close external database.
+$error_l:=EXT_Close 
+Else 
+UTIL_ERR_ErrorMethod_t:=Current method name
+// Still close the external database if another problem
+// occurred but don't overwrite the error code.
+EXT_CloseIfError 
+End if 
+End if 

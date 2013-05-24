@@ -1,0 +1,23 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 13:12:36
+// ----------------------------------------------------
+// Description:
+//   
+//
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l;$error_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Load )
+
+$error_l:=ASSERT_FORM_RefreshCategories 
+
+If ($error_l#0)
+UTIL_ERR_HandleError ($error_l;"ASSERT_";Current method name)
+End if 
+
+End case 

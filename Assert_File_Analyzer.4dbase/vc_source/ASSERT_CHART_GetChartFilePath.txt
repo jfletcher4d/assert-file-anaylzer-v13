@@ -1,0 +1,38 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 15:21:46
+// ----------------------------------------------------
+// Description:
+//   For each start time and end time in a given chart,
+//   the chart is saved to a unique HTML file. This
+//   method gives you the path to that file.
+// --[HEADEREND]---------------------------------------
+C_TEXT($1;$sessionName_t)
+C_DATE($2;$startDate_d)
+C_DATE($3;$endDate_d)
+C_TIME($4;$startTime_h)
+C_TIME($5;$endTime_h)
+
+C_TEXT($0;$destPath_t)
+
+C_TEXT($sessionRoot_t;$fileName_t)
+
+$sessionName_t:=$1
+$startDate_d:=$2
+$endDate_d:=$3
+$startTime_h:=$4
+$endTime_h:=$5
+
+$sessionName_t:=Replace string($sessionName_t;" ";"_")
+
+$sessionRoot_t:=<>ASSERT_SessionsRoot_t+$sessionName_t+Folder separator 
+
+// Generate semi-unique file name.
+$fileName_t:=String($startDate_d;ISO Date ;$startTime_h)
+$fileName_t:=$fileName_t+"_to_"+String($endDate_d;ISO Date ;$endTime_h)
+$fileName_t:=Replace string($fileName_t;":";"_")
+
+$destPath_t:=$sessionRoot_t+$fileName_t+".html"
+
+$0:=$destPath_t

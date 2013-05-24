@@ -1,0 +1,22 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 16:31:29
+// ----------------------------------------------------
+// Description:
+//   Control the label of the "add" button on the
+//   ASSERT_ListEntryCategories form depending on if the
+//   user has a row selected or not.
+//
+//   This is a FORM METHOD. As such it relies on form
+//   objects that already exist DO NOT CALL THIS METHOD
+//   ON ITS OWN.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($row_l;$column_l)
+
+LISTBOX GET CELL POSITION(lb_cats_af;$column_l;$row_l)
+If ($row_l=0)
+OBJECT SET TITLE(b_Add_l;"Add")
+Else 
+OBJECT SET TITLE(b_Add_l;"Edit")
+End if 

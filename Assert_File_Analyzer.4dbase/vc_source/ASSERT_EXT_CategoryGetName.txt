@@ -1,0 +1,47 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 16:09:33
+// ----------------------------------------------------
+// Description:
+//   Given category ID, get category name.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$categoryID_l)
+C_POINTER($2;$categoryName_t_p)
+
+C_TEXT($categoryName_t)
+
+C_LONGINT($0;$error_l)
+
+$categoryID_l:=$1
+$categoryName_t_p:=$2
+
+
+$error_l:=EXT_Open 
+
+If ($error_l=0)
+
+UTIL_ERR_HandlerInstall 
+Begin SQL
+SELECT categoryName
+FROM ASSERT_EntryCategory
+WHERE categoryID = :$categoryID_l
+INTO :$categoryName_t;
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+
+If ($error_l=0)
+$categoryName_t_p->:=$categoryName_t
+
+// Close external database.
+$error_l:=EXT_Close 
+Else 
+UTIL_ERR_ErrorMethod_t:=Current method name
+// Still close the external database if another problem
+// occurred but don't overwrite the error code.
+EXT_CloseIfError 
+End if 
+
+End if 
+
+$0:=$error_l

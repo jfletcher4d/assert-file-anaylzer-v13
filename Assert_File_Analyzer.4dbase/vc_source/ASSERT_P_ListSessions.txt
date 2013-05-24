@@ -1,0 +1,17 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 12:41:20
+// ----------------------------------------------------
+// Description:
+//   Method to open dialog to view/edit sessions
+//   (imported assert files).
+// --[HEADEREND]---------------------------------------
+C_LONGINT($winRef)
+
+ALL RECORDS([ASSERT_Session])
+
+$winRef:=Open form window([ASSERT_Session];"User_Input";Plain form window +4096;Horizontally Centered ;Vertically Centered )
+MODIFY SELECTION([ASSERT_Session])
+
+CLOSE WINDOW($winRef)

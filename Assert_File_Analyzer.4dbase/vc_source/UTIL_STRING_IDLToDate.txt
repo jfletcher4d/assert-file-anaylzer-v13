@@ -1,0 +1,65 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 07/01/09, 04:48:16
+// ----------------------------------------------------
+// Description:
+//    Convert "Internal date long" string to a date.
+//    E.g. June 29, 2009 becomes 06/29/09
+//
+//    If there is a problem, the return value is 00/00/00
+// --[HEADEREND]---------------------------------------
+C_TEXT($1;$theIDLDateString_t)
+
+C_DATE($0;$theDate_d)
+
+C_TEXT($patternIDL_t;$theMonth_t;$theDay_t;$theYear_t;$theNewDateString_t)
+C_LONGINT($theMonth_l)
+C_BOOLEAN($found_f)
+
+// For regex capture groups.
+ARRAY LONGINT($regexPos_al;0)
+ARRAY LONGINT($regexLen_al;0)
+
+ARRAY TEXT($theMonths_at;12)
+
+$theMonths_at{January }:="January"
+$theMonths_at{February }:="February"
+$theMonths_at{March }:="March"
+$theMonths_at{April }:="April"
+$theMonths_at{May }:="May"
+$theMonths_at{June }:="June"
+$theMonths_at{July }:="July"
+$theMonths_at{August }:="August"
+$theMonths_at{September }:="September"
+$theMonths_at{October }:="October"
+$theMonths_at{November }:="November"
+$theMonths_at{December }:="December"
+
+$theIDLDateString_t:=$1
+
+$patternIDL_t:="([A-Za-z]+) (\\d+), (\\d+)"
+
+$found_f:=Match regex($patternIDL_t;$theIDLDateString_t;1;$regexPos_al;$regexLen_al)
+
+If ($found_f)
+
+// Get the parts: group 1 is the month, group 2 the day, group 3 the year.
+$theMonth_t:=Substring($theIDLDateString_t;$regexPos_al{1};$regexLen_al{1})
+$theMonth_l:=Find in array($theMonths_at;$theMonth_t)
+$theMonth_t:=String($theMonth_l;"00")
+$theDay_t:=Substring($theIDLDateString_t;$regexPos_al{2};$regexLen_al{2})
+$theYear_t:=Substring($theIDLDateString_t;$regexPos_al{3};$regexLen_al{3})
+$theYear_t:=Substring($theYear_t;3)
+
+// Build the date string...
+$theNewDateString_t:=$theMonth_t+"/"+$theDay_t+"/"+$theYear_t
+
+// Conver to date...
+$theDate_d:=Date($theNewDateString_t)
+
+Else // Date not found.
+$theDate_d:=!00/00/00!
+End if 
+
+$0:=$theDate_d

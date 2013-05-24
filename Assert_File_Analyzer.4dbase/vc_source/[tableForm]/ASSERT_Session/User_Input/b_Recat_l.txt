@@ -1,0 +1,18 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:08:57
+// ----------------------------------------------------
+// Description:
+//   If you edit the category data it can be necessary
+//   to recategorize all the log entries.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l;$error_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+$error_l:=ASSERT_DATA_CategorizeEntries 
+PROG_CloseAll 
+End case 

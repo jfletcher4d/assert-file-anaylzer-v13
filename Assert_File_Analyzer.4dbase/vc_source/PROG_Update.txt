@@ -1,0 +1,62 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 09/19/12, 11:40:48
+// ----------------------------------------------------
+// Description:
+//   Update saved progress bar values.
+//
+//   This does NOT interact with the 4D Progress component.
+//   This is an optimization so that tight loops that
+//   are updating a progress bar won't be slowed down
+//   by calls to the 4D Progress component.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$myProgressBarID_l)// Required
+C_REAL($2)// Required, used for Progress SET PROGRESS
+
+// I tried to sort these by the order in which they are likely to be passed.
+C_LONGINT($3)// Optional, used with Progress SET MESSAGE
+C_LONGINT($4)// Optional, used with Progress SET MESSAGE
+C_TEXT($5)// optional, used with Progress SET MESSAGE
+C_TEXT($6)// optional, used with Progress SET TITLE
+C_LONGINT($7)// optional, see PROG_MAN_IsRequired
+
+C_LONGINT($totalParams_l;$position_l)
+
+$myProgressBarID_l:=$1
+
+While (Semaphore(<>PROG_Semaphore_t))
+IDLE
+End while 
+
+$position_l:=Find in array(<>PROG_IDs_al;$myProgressBarID_l)
+
+// Make sure this progress bar exists.
+If ($position_l>-1)
+
+<>PROG_Progress_ar{$position_l}:=$2
+
+$totalParams_l:=Count parameters
+If ($totalParams_l>=3)
+<>PROG_Current_al{$position_l}:=$3
+If ($totalParams_l>=4)
+<>PROG_Total_al{$position_l}:=$4
+If ($totalParams_l>=5)
+<>PROG_Message_at{$position_l}:=$5
+If ($totalParams_l>=6)
+<>PROG_Title_at{$position_l}:=$6
+If ($totalParams_l>=7)
+<>PROG_Threshold_al{$position_l}:=$7
+End if 
+End if 
+End if 
+End if 
+End if 
+
+Else 
+// The progress bar does not exist.
+// This is so unlikely, and this method will be called in loops,
+// I'd rather just ignore it as opposed to returning an error.
+End if 
+
+CLEAR SEMAPHORE(<>PROG_Semaphore_t)

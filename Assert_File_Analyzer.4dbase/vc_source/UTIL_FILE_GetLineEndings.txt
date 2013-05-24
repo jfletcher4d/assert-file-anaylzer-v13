@@ -1,0 +1,64 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/08/13, 12:01:44
+// ----------------------------------------------------
+// Description:
+//   Determine type of line endings in file.
+// --[HEADEREND]---------------------------------------
+C_TEXT($1;$pathToFile_t)
+C_POINTER($2;$endl_p_t)
+
+C_LONGINT($0;$error_l)
+
+C_TEXT($cr_t;$lf_t;$buffer_t)
+C_TIME($docRef_h)
+
+$pathToFile_t:=$1
+$endl_p_t:=$2
+
+$cr_t:=Char(Carriage return )
+$lf_t:=Char(Line feed )
+
+If (Test path name($pathToFile_t)=Is a document )
+
+$docRef_h:=Open document($pathToFile_t;"";Read Mode )
+
+// Check for CRLF first.
+RECEIVE PACKET($docRef_h;$buffer_t;$cr_t+$lf_t)
+
+If (OK=1)
+$endl_p_t->:=$cr_t+$lf_t
+Else 
+
+// Check for LF only...
+SET DOCUMENT POSITION($docRef_h;0)
+RECEIVE PACKET($docRef_h;$buffer_t;$lf_t)
+
+If (OK=1)
+$endl_p_t->:=$lf_t
+Else 
+
+// Check for CR only...very rare, old-style Mac.
+SET DOCUMENT POSITION($docRef_h;0)
+RECEIVE PACKET($docRef_h;$buffer_t;$cr_t)
+
+If (OK=1)
+$endl_p_t->:=$cr_t
+Else 
+$endl_p_t->:=""
+$error_l:=<>ERR_FILE_ENDLNotFound_l
+End if 
+
+End if 
+End if 
+
+CLOSE DOCUMENT($docRef_h)
+
+Else 
+$endl_p_t->:=""
+$error_l:=<>ERR_FileNotFound_l
+End if 
+
+$0:=$error_l
+

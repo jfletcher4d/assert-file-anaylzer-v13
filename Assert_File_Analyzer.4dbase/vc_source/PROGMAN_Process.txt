@@ -1,0 +1,36 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): jfletcher
+// Date and time: 03/14/13, 11:04:57
+// ----------------------------------------------------
+// Description:
+//   Progress module manager process. If you use this
+//   module, this is where all the progress bars are
+//   managed.
+//
+//   I.e. all progress bars are opened in the same
+//   shared process. This is a stored procedure.
+// --[HEADEREND]---------------------------------------
+C_BOOLEAN($DBIsQuitting_f)
+C_BOOLEAN(PROG_Displayed_f)
+
+Repeat 
+
+While (Semaphore(<>PROG_Semaphore_t))
+IDLE
+End while 
+
+PROGMAN_DoUpdates 
+
+CLEAR SEMAPHORE(<>PROG_Semaphore_t)
+
+// This method detects if the database is quitting,
+// in addition to delaying the process.
+$DBIsQuitting_f:=UTIL_PROC_DelayProcess (10)
+
+IDLE
+
+Until ($DBIsQuitting_f | <>PROG_StopManager_f)
+
+// Just in case any progress bars have been left open.
+PROGMAN_CloseAll 

@@ -1,0 +1,30 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 12:41:20
+// ----------------------------------------------------
+// Description:
+//   Method to open dialog to view/edit categories.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($winRef)
+
+// List Box that lists categories.
+ARRAY BOOLEAN(lb_cats_af;0)
+
+// List Box columns
+ARRAY LONGINT(c_EntryCatOrder_al;0)
+ARRAY TEXT(c_EntryCatName_at;0)
+ARRAY TEXT(c_EntryCatFilter_at;0)
+
+// Non-visible array to track IDs.
+ARRAY LONGINT(EntryCatID_al;0)
+
+// Entry form variables
+ARRAY LONGINT(pddl_CatOrder_al;0)
+C_TEXT(v_catName_t;v_catFilter_t)
+
+
+$winRef:=Open form window("ASSERT_ListEntryCategories";Plain form window ;Horizontally Centered ;Vertically Centered )
+DIALOG("ASSERT_ListEntryCategories")
+
+CLOSE WINDOW($winRef)

@@ -1,0 +1,198 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/08/13, 11:11:09
+// ----------------------------------------------------
+// Description:
+//   Import all entries from an assert file into the
+//   database.
+//
+//   Extract the entry date.
+//   Extract the entry time.
+//   Extract the entry content and remove line endings.
+//
+//   Note: The path should be validated before calling
+//   this method.
+//
+//   Note: an [ASSERT_Session] record is required.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($0;$error_l)
+
+C_TEXT($pathToAssertFile_t;$asserFileLine_t;$entry_t;$endl_t;$lf_t)
+C_TEXT($patternStartLog_t;$patternStartDateTime_t;$patternDateTimeEntry_t;$patternHello_t)
+C_TEXT($progTitle_t;$progMessage_t)
+C_LONGINT($currentPos_l;$progThreshold_l;$progID_l;$progPos_l)
+C_REAL($totalData_r;$progress_r)
+C_DATE($entryDate_d)
+C_TIME($docRef_h;$entryTime_h)
+C_BOOLEAN($continueEntry_f;$startEntry_f;$continueFile_f;$found_f;$saveEntry_f)
+
+// Arrays for regex capture groups.
+ARRAY LONGINT($regexPos_al;0)
+ARRAY LONGINT($regexLen_al;0)
+
+If (Is record loaded([ASSERT_Session]))
+
+$lf_t:=Char(Line feed )// line ending used in the data.
+
+// These are NOT the same as the category patterns.
+// These patterns are used to parse the file because an assert.txt contains up to 3 types of entries.
+// -The start of the log.
+// -The "Hello" message from the SQL server.
+// -Everything else.
+$patternStartLog_t:="4D log file opened on .+"
+$patternStartDateTime_t:="4D log file opened on \\w+, ([A-Za-z]+ \\d+, \\d+) (\\d+:\\d+:\\d+).*"
+$patternDateTimeEntry_t:="\\d\\d/\\d\\d/\\d\\d, \\d\\d:\\d\\d:\\d\\d"// 00/00/00, 00:00:00
+$patternHello_t:="\\*\\*\\*Hello from SQL Server!\\*\\*\\*"
+
+$pathToAssertFile_t:=[ASSERT_Session]LogFilePath
+
+If (Test path name($pathToAssertFile_t)=Is a document )
+
+// I need to know which line endings the file uses for RECEIVE PACKET.
+$error_l:=UTIL_FILE_GetLineEndings ($pathToAssertFile_t;->$endl_t)
+
+If ($error_l=0)
+
+$docRef_h:=Open document($pathToAssertFile_t;"";Read Mode )
+$totalData_r:=Get document size($docRef_h)
+
+// Progress bar setup.
+$progThreshold_l:=1000// Only show progress bar if the import will take longer than one second.
+$progTitle_t:="Importing Assert File Data"
+$progMessage_t:="bytes"
+$progID_l:=PROG_Create ($progTitle_t;$totalData_r;$progThreshold_l;$currentPos_l;$progress_r;$progMessage_t)
+
+Repeat 
+
+// Clear out an previous values.
+$entry_t:=""
+$entryDate_d:=!00/00/00!
+$entryTime_h:=?00:00:00?
+$saveEntry_f:=False
+
+$currentPos_l:=Get document position($docRef_h)
+$progress_r:=$currentPos_l/$totalData_r
+
+// This is an optimization; instead of making a precedure call,
+// I update the arrays directly.
+//  PROG_Update ($progID_l;$progress_r;$currentPos_l)
+// Need to locate the position each time because other progress bars could be closed.
+// WARNING: this should be protected by <>PROG_Semaphore_t in a true multi-process situation.
+$progPos_l:=Find in array(<>PROG_IDs_al;$progID_l)
+<>PROG_Progress_ar{$progPos_l}:=$progress_r
+<>PROG_Current_al{$progPos_l}:=$currentPos_l
+
+// Get one line of log data.
+RECEIVE PACKET($docRef_h;$asserFileLine_t;$endl_t)
+
+If (OK=1)
+$continueFile_f:=True
+Else 
+$continueFile_f:=False
+End if 
+
+If ($continueFile_f)
+
+// Check to see if this line is one to save...
+Case of 
+
+
+// This is the most common kind of entry found in the log file.
+: (Match regex($patternDateTimeEntry_t;$asserFileLine_t))
+// As an optimization, fetch the rest of the entry now instead of using the outside loop.
+// This is faster than dropping through the larger CASE OF.
+
+$entry_t:=$asserFileLine_t
+
+// BEGIN: ASSERT_FILE_GrabEntry - this could be a subroutine, but it's not called for speed optimization.
+// You stop when you hit a blank line.
+Repeat 
+RECEIVE PACKET($docRef_h;$asserFileLine_t;$endl_t)
+If (Length($asserFileLine_t)>0)
+$entry_t:=$entry_t+$lf_t+$asserFileLine_t
+$continueEntry_f:=True
+Else 
+$continueEntry_f:=False
+End if 
+Until ($continueEntry_f=False)
+// END: ASSERT_FILE_GrabEntry
+
+$entryDate_d:=Date(Substring($entry_t;1;8))
+$entryTime_h:=Time(Substring($entry_t;11;8))
+$saveEntry_f:=True
+
+
+// Blank lines signal the end of an entry (or just a blank line). However the other cases should catch all known entry types.  If we get here, we have an unknown entry type.
+// Note: no date or time info is saved here because I can't be sure this entry had any (see ELSE).
+: (Length($asserFileLine_t)=0)
+If ($startEntry_f)
+$startEntry_f:=False
+$entry_t:="Unknown Entry Type: "+$entry_t
+$saveEntry_f:=True
+End if 
+
+
+// This line indicates the start of a logging session. 
+: (Match regex($patternStartLog_t;$asserFileLine_t))
+// Generally only appears once so it's at the end of the CASE OF.
+$entry_t:=$asserFileLine_t
+
+// Extract date and time.
+$found_f:=Match regex($patternStartDateTime_t;$entry_t;1;$regexPos_al;$regexLen_al)
+If ($found_f)
+// Group 1 is date, 2 is time.
+$entryDate_d:=UTIL_STRING_IDLToDate (Substring($entry_t;$regexPos_al{1};$regexLen_al{1}))
+$entryTime_h:=Time(Substring($entry_t;$regexPos_al{2};$regexLen_al{2}))
+End if 
+$saveEntry_f:=True
+
+
+// This is a message that appears in the log by itself, no date
+// or time stamp. Usually only appears once.
+: (Match regex($patternHello_t;$asserFileLine_t))
+$entry_t:=$asserFileLine_t
+$saveEntry_f:=True
+
+
+Else 
+
+// At this point we've encountered a line of content not yet recognized.
+If ($startEntry_f=False)
+// At this point we've encountered an unrecognized entry type. I still want to save it.
+$startEntry_f:=True
+$entry_t:=$asserFileLine_t
+Else 
+// This is just a line of log content for the current entry.
+$entry_t:=$entry_t+$lf_t+$asserFileLine_t
+End if 
+
+End case 
+
+
+If ($saveEntry_f)
+CREATE RECORD([ASSERT_Data])
+[ASSERT_Data]LogEntryRaw:=$entry_t
+[ASSERT_Data]LogEntryNoLF:=Replace string($entry_t;$lf_t;"")
+[ASSERT_Data]LogEntryDate:=$entryDate_d
+[ASSERT_Data]LogEntryTime:=$entryTime_h
+[ASSERT_Data]_SessionID:=[ASSERT_Session]SessionID
+SAVE RECORD([ASSERT_Data])
+End if 
+
+
+End if 
+Until ($continueFile_f=False)
+
+CLOSE DOCUMENT($docRef_h)
+
+End if 
+
+Else 
+$error_l:=<>ERR_FileNotFound_l
+End if 
+Else 
+$error_l:=<>ERR_ASSERT_NoSession_l
+End if 
+
+$0:=$error_l

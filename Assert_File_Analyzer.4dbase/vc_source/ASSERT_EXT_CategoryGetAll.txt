@@ -1,0 +1,49 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 16:08:39
+// ----------------------------------------------------
+// Description:
+//   Get all category ID's and patterns. This is used
+//   by ASSERT_DATA_CategorizeEntries.
+// --[HEADEREND]---------------------------------------
+C_POINTER($1;$categoryIDs_al_p)
+C_POINTER($2;$categoryPatterns_at_p)
+
+C_LONGINT($0;$error_l)
+
+ARRAY LONGINT($categoryIDs_al;0)
+ARRAY TEXT($categoryPatterns_at;0)
+
+$categoryIDs_al_p:=$1
+$categoryPatterns_at_p:=$2
+
+$error_l:=EXT_Open 
+
+If ($error_l=0)
+
+UTIL_ERR_HandlerInstall 
+Begin SQL
+SELECT categoryID, categoryPattern
+FROM ASSERT_EntryCategory
+ORDER BY categoryOrder ASC
+INTO :$categoryIDs_al, :$categoryPatterns_at;
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+
+If ($error_l=0)
+COPY ARRAY($categoryIDs_al;$categoryIDs_al_p->)
+COPY ARRAY($categoryPatterns_at;$categoryPatterns_at_p->)
+
+// Close external database.
+$error_l:=EXT_Close 
+Else 
+UTIL_ERR_ErrorMethod_t:=Current method name
+// Still close the external database if another problem
+// occurred but don't overwrite the error code.
+EXT_CloseIfError 
+End if 
+
+End if 
+
+$0:=$error_l

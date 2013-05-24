@@ -1,0 +1,69 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 06/16/11, 18:12:04
+// ----------------------------------------------------
+// Description:
+//   Error module startup code.
+//
+//   See UTIL_ERR_GetErrorMessage for error descriptions.
+// --[HEADEREND]---------------------------------------
+
+UTIL_ERR_HandlerPrep 
+
+// This can be used to optionally track the method that caused an error.
+C_TEXT(UTIL_ERR_ErrorMethod_t)
+
+// *****************
+// Error blocks already in use:
+//
+//   (I recommend reserving blocks of 100 for each module just to have a safe buffer)
+//
+//   -19300-19399 - UTIL_FILE_
+//   -19400-19499 - Global
+//   -18100-18199 - EXT_
+//   -18200-18299 - ASSERT_
+// *****************
+
+
+
+// *****************
+//   -19400-19499 - Global
+// *****************
+C_LONGINT(<>ERR_Unknown_l)
+C_LONGINT(<>ERR_4D_l)
+C_LONGINT(<>ERR_FileNotFound_l)
+
+<>ERR_Unknown_l:=-19400
+<>ERR_4D_l:=-19401
+<>ERR_FileNotFound_l:=-19402
+
+// *****************
+//   -19300-19399 - UTIL_FILE_
+// *****************
+C_LONGINT(<>ERR_FILE_ENDLNotFound_l)
+
+<>ERR_FILE_ENDLNotFound_l:=-19300
+
+// *****************
+//   -18100-18199 - EXT_
+// *****************
+C_LONGINT(<>ERR_EXT_NotOpen_l)
+C_LONGINT(<>ERR_PREF_NotFound_l)
+
+<>ERR_EXT_NotOpen_l:=-18100
+<>ERR_PREF_NotFound_l:=-18101
+
+
+// *****************
+//   -18200-18299 - ASSERT_
+// *****************
+C_LONGINT(<>ERR_ASSERT_CatInfoMissing_l)
+C_LONGINT(<>ERR_ASSERT_BadTime_l)
+C_LONGINT(<>ERR_ASSERT_BadDate_l)
+C_LONGINT(<>ERR_ASSERT_NoSession_l)
+
+<>ERR_ASSERT_CatInfoMissing_l:=-18200
+<>ERR_ASSERT_BadTime_l:=-18201
+<>ERR_ASSERT_BadDate_l:=-18202
+<>ERR_ASSERT_NoSession_l:=-18203

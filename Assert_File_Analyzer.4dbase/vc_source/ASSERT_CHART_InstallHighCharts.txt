@@ -1,0 +1,18 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 05/24/13, 11:47:55
+// ----------------------------------------------------
+// Description:
+//   Install required highcharts files to the indicated path.
+//
+// --[HEADEREND]---------------------------------------
+C_TEXT($1;$destination_t)
+
+C_TEXT($highChartsSource_t)
+
+$destination_t:=$1
+
+$highChartsSource_t:=Get 4D folder(HTML Root Folder )+"js"+Folder separator 
+
+COPY DOCUMENT($highChartsSource_t;$destination_t;*)

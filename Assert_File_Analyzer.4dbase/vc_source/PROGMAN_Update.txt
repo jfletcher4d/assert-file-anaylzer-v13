@@ -1,0 +1,101 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 09/19/12, 11:40:48
+// ----------------------------------------------------
+// Description:
+//   Create progress bar if needed. Update progress bar.
+// 
+//   Note: The default message includes "x of y" as a
+//   prefix.
+//
+//   To some extent this is a wrapper for Progress New
+//   but the primary motiviation is to allow a progress
+//   bar to be created without showing it on screen and,
+//   thus, not show it at all if the job is too fast.
+//
+//   The value of $threshold_l determines when a
+//   progress bar will be displayed. If the job is
+//   estimated to take longer than this value the
+//   progress bar will be shown. If not, it won't.
+//
+//   Since a 4D Progress bar may not yet be opened, I
+//   need to track progress-related data (title, etc.)
+//   independently.
+//
+//   One enhancement to consider is window position, I
+//   always open these "out of the way"...this makes this
+//   progress module less-generic.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$pos_l)
+
+C_LONGINT($4DProgressBarID_l;$currentItem_l;$totalItems_l;$threshold_l)
+C_TEXT($title_t;$message_t;$prefix_t;$format_t)
+C_REAL($progress_r)
+
+$pos_l:=$1
+
+$format_t:="###,###,###,###"
+
+$4DProgressBarID_l:=<>PROG_4DIDs_al{$pos_l}
+
+$title_t:=<>PROG_Title_at{$pos_l}
+$currentItem_l:=<>PROG_Current_al{$pos_l}
+$totalItems_l:=<>PROG_Total_al{$pos_l}
+
+$threshold_l:=<>PROG_Threshold_al{$pos_l}
+$progress_r:=<>PROG_Progress_ar{$pos_l}
+$message_t:=<>PROG_Message_at{$pos_l}
+
+// Handle display of progress bar.
+If ($4DProgressBarID_l=0)
+
+// Check to see if the current job will take longer than the threshold.
+If (PROGMAN_IsRequired ($pos_l))
+
+// If so open a progress bar.
+$4DProgressBarID_l:=Progress New 
+<>PROG_4DIDs_al{$pos_l}:=$4DProgressBarID_l
+
+Progress SET TITLE ($4DProgressBarID_l;$title_t)
+
+If (PROG_Displayed_f=False)
+// This is the first time the progress window has appeared, let's position it.
+// Move it to the lower-right to make slightly less obtrusive. 
+Progress SET WINDOW VISIBLE (True;(Screen width-450);(Screen height-250))
+PROG_Displayed_f:=True
+End if 
+
+End if 
+
+End if // End Handle display of progress bar.
+
+
+// Handle update of progress bar, but *only* if it's being displayed.
+If ($4DProgressBarID_l#0)
+
+If (Not(Progress Stopped ($4DProgressBarID_l)))
+
+// Set the progress value...
+Progress SET PROGRESS ($4DProgressBarID_l;$progress_r)// 4D Progress requires value between 0 and 1
+
+Progress SET TITLE ($4DProgressBarID_l;$title_t)
+
+// The prefix is "x of y"...
+$prefix_t:=String($currentItem_l;$format_t)+" of "
+$prefix_t:=$prefix_t+String($totalItems_l;$format_t)
+
+// Check to see if no message is being used at all.
+If ($message_t="")
+// There is no message, so just use the prefix.
+$message_t:=$prefix_t
+Else 
+// There is a message, concatenate the prefix.
+$message_t:=$prefix_t+" "+$message_t
+End if 
+
+Progress SET MESSAGE ($4DProgressBarID_l;$message_t)
+
+End if 
+
+End if // End handle update of progress bar.

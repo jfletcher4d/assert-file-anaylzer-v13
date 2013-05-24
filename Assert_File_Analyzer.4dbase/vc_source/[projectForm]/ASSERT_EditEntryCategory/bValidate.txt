@@ -1,0 +1,20 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+C_LONGINT($formEvent_l;$error_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+
+// Validate variables.
+// Make sure not blank.
+
+If ((v_catName_t#"") & (v_catFilter_t#""))
+EntryCatAction_t:="SAVE"
+CANCEL
+Else 
+$error_l:=<>ERR_ASSERT_CatInfoMissing_l
+UTIL_ERR_HandleError ($error_l)
+End if 
+
+End case 

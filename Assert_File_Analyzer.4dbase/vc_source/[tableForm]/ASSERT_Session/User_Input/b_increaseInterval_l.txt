@@ -1,0 +1,20 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:07:12
+// ----------------------------------------------------
+// Description:
+//   Button to increase the interval for the chart.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+ASSERT_FORM_SetInterval ("increase")
+
+: ($formEvent_l=On Load )
+ASSERT_FORM_SetInterval ("load")
+
+End case 

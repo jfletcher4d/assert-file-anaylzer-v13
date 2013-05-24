@@ -1,0 +1,27 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:03:18
+// ----------------------------------------------------
+// Description:
+//   Generic method for use with Web Areas.
+//
+//   Given a system path to a local file, convert it to
+//   POSIX and open with file: protocol in Web Area.
+// --[HEADEREND]---------------------------------------
+C_POINTER($1;$webArea_t_p)
+C_TEXT($2;$destPath_t)
+
+$webArea_t_p:=$1
+$destPath_t:=$2
+
+$destPath_t:=Convert path system to POSIX($destPath_t;*)
+
+// Mac OS and Windows require different syntax for the "host" portion of file:
+If (Folder separator ="\\")
+$destPath_t:="file:///"+$destPath_t
+Else 
+$destPath_t:="file://localhost"+$destPath_t
+End if 
+
+WA OPEN URL($webArea_t_p->;$destPath_t)

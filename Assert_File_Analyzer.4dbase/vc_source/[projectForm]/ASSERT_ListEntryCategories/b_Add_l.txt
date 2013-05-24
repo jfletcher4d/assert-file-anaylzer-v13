@@ -1,0 +1,16 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 14:22:56
+// ----------------------------------------------------
+// Description:
+//   Add new or edit an existing category.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+ASSERT_FORM_EditCategory 
+End case 

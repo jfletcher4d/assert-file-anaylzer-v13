@@ -1,0 +1,29 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:08:04
+// ----------------------------------------------------
+// Description:
+//   Reset all chart constraints to default values.
+//
+//   Default values are determined by the amount of
+//   assert data.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+
+ASSERT_intervalInSeconds_l:=ASSERT_ogInterval_l
+v_intervalInMinutes_l:=ASSERT_intervalInSeconds_l/60
+
+ASSERT_FORM_SetInterval ("")
+
+v_startDate_d:=ASSERT_ogStartDate_d
+v_endDate_d:=ASSERT_ogEndDate_d
+v_startTime_h:=ASSERT_ogStartTime_h
+v_endTime_h:=ASSERT_ogEndTime_h
+
+End case 

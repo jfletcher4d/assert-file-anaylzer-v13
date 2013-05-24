@@ -1,0 +1,25 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): jfletcher
+// Date and time: 03/14/13, 14:37:55
+// ----------------------------------------------------
+// Description:
+//   Mark progress bars for this process to be closed.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($i;$limit_l;$PID_l)
+
+$PID_l:=Current process
+
+$limit_l:=Size of array(<>PROG_IDs_al)
+
+While (Semaphore(<>PROG_Semaphore_t))
+IDLE
+End while 
+
+For ($i;1;$limit_l)
+If (<>PROG_PIDs_al{$i}=$PID_l)
+<>PROG_Close_af{$i}:=True
+End if 
+End for 
+
+CLEAR SEMAPHORE(<>PROG_Semaphore_t)

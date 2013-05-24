@@ -1,0 +1,126 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 14:23:20
+// ----------------------------------------------------
+// Description:
+//   GUI method to display a dialog in order to edit an
+//   entry category record.
+//
+//   This is a FORM METHOD. As such it relies on form
+//   objects that already exist DO NOT CALL THIS METHOD
+//   ON ITS OWN.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($row_l;$catOrder_l;$error_l;$i;$limit_l)
+
+// Input form variables
+C_TEXT(v_catName_t;v_catFilter_t)
+C_TEXT(EntryCatAction_t)
+C_LONGINT(EntryCatID_l)
+
+C_BOOLEAN($stop_f)
+
+EntryCatAction_t:=""
+
+// A loop is used so that the user can browse through the selection using
+// this dialog (first, last, next, previous).  Closing and opening the
+// dialog in a loop gives us access to form events you would not otherwise
+// have by just updating the dialog varaibles directly. In this way it 
+// greatly simplifies the form code.
+While (Not($stop_f))
+
+ARRAY LONGINT(pddl_CatOrder_al;0)
+
+EntryCatAction_t:=""
+
+// Get the selected row in the list box.
+$row_l:=lb_cats_af
+
+// Get the priority level for this record, used later to select the value in a pop-up/drop-down list.
+$catOrder_l:=c_EntryCatOrder_al{$row_l}
+
+// Get all current distinct priority values for use in the drop down list.
+$limit_l:=Size of array(c_EntryCatOrder_al)
+For ($i;1;$limit_l)
+If (Find in array(pddl_CatOrder_al;c_EntryCatOrder_al{$i})=-1)
+APPEND TO ARRAY(pddl_CatOrder_al;c_EntryCatOrder_al{$i})
+End if 
+End for 
+// Always add 1 more case the user wants to move it later.
+APPEND TO ARRAY(pddl_CatOrder_al;Max(pddl_CatOrder_al)+1)
+
+If ($row_l=0)
+// Create a new category.
+EntryCatID_l:=0
+v_catName_t:=""
+v_catFilter_t:=""
+pddl_CatOrder_al:=Size of array(pddl_CatOrder_al)
+Else 
+// Edit existing category.
+EntryCatID_l:=EntryCatID_al{$row_l}
+pddl_CatOrder_al:=Find in array(pddl_CatOrder_al;$catOrder_l)
+v_catName_t:=c_EntryCatName_at{$row_l}
+v_catFilter_t:=c_EntryCatFilter_at{$row_l}
+End if 
+
+
+// Get values from the user.
+DIALOG("ASSERT_EditEntryCategory")
+
+
+// Again, the loop allows us to browse the selection from the
+// dialog; check to see what the user clicked.
+Case of 
+: (EntryCatAction_t="SAVE")
+$catOrder_l:=pddl_CatOrder_al{pddl_CatOrder_al}
+$error_l:=ASSERT_EXT_CategoryEdit (EntryCatID_l;v_catName_t;v_catFilter_t;$catOrder_l)
+
+: (EntryCatAction_t="DELETE")
+$error_l:=ASSERT_EXT_CategoryDelete (EntryCatID_l)
+
+: (EntryCatAction_t="FIRST")
+lb_cats_af:=1
+
+: (EntryCatAction_t="NEXT")
+If (lb_cats_af<Size of array(lb_cats_af))
+lb_cats_af:=lb_cats_af+1
+End if 
+
+: (EntryCatAction_t="PREVIOUS")
+If (lb_cats_af>1)
+lb_cats_af:=lb_cats_af-1
+End if 
+
+: (EntryCatAction_t="LAST")
+lb_cats_af:=Size of array(lb_cats_af)
+
+: (EntryCatAction_t="CANCEL")
+
+End case 
+
+If ($error_l=0)
+// Update the list box arrays so they have the latest data.
+// TODO: this could be optimized to only happen when the data is changed probably (SAVE, DELETE).
+$error_l:=ASSERT_FORM_RefreshCategories 
+End if 
+
+Case of 
+: ($error_l#0)
+$stop_f:=True
+
+: (EntryCatAction_t="CANCEL")
+$stop_f:=True
+
+: (EntryCatAction_t="SAVE")
+// TODO: Enhancement: allow creation of records in a loop.
+$stop_f:=True
+
+End case 
+
+End while 
+
+
+
+If ($error_l#0)
+UTIL_ERR_HandleError ($error_l;"ASSERT_";Current method name)
+End if 

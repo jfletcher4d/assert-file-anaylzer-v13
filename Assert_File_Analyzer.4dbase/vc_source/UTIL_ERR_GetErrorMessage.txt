@@ -1,0 +1,65 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/16/09, 17:07:07
+// ----------------------------------------------------
+// Description:
+//   Error message retreival for error handling module.
+//
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$errorCode_l)
+
+C_TEXT($0;$errorMessage_t)
+
+C_TEXT($nullMessage_t)
+
+$errorCode_l:=$1
+
+$nullMessage_t:="Invalid error code."
+
+Case of 
+// *****************
+//   -19400-19499 - Global
+// *****************
+: ($errorCode_l=<>ERR_Unknown_l)
+$errorMessage_t:="Unknown error."
+: ($errorCode_l=<>ERR_4D_l)
+$errorMessage_t:="Internal 4D Error."
+: ($errorCode_l=<>ERR_FileNotFound_l)
+$errorMessage_t:="File not found."
+
+
+// *****************
+//   -19300-19399 - UTIL_FILE_
+// *****************
+: ($errorCode_l=<>ERR_FILE_ENDLNotFound_l)
+$errorMessage_t:="No line endings found."
+
+
+// *****************
+//   -18100-18199 - EXT_
+// *****************
+: ($errorCode_l=<>ERR_EXT_NotOpen_l)
+$errorMessage_t:="There are no open connections to close."
+: ($errorCode_l=<>ERR_PREF_NotFound_l)
+$errorMessage_t:="Preference does not exist."
+
+
+// *****************
+//   -18200-18299 - ASSERT_
+// *****************
+: ($errorCode_l=<>ERR_ASSERT_CatInfoMissing_l)
+$errorMessage_t:="Category info is incomplete."
+: ($errorCode_l=<>ERR_ASSERT_BadTime_l)
+$errorMessage_t:="End time less than start time."
+: ($errorCode_l=<>ERR_ASSERT_BadDate_l)
+$errorMessage_t:="End date less than start date."
+: ($errorCode_l=<>ERR_ASSERT_NoSession_l)
+$errorMessage_t:="No such session exists."
+
+
+Else 
+$errorMessage_t:=$nullMessage_t
+End case 
+
+$0:=$errorMessage_t

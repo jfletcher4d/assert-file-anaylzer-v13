@@ -1,0 +1,32 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 16:29:56
+// ----------------------------------------------------
+// Description:
+//   This is basically ALL RECORDS for
+//   ASSERT_EntryCategory, updates the list box content.
+//
+//   This is a FORM METHOD. As such it relies on form
+//   objects that already exist DO NOT CALL THIS METHOD
+//   ON ITS OWN.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($error_l)
+
+// Open external database.
+$error_l:=EXT_Open 
+
+If ($error_l=0)
+
+Begin SQL
+SELECT categoryID, categoryOrder, categoryName, categoryPattern
+FROM ASSERT_EntryCategory
+ORDER BY categoryOrder ASC
+INTO :EntryCatID_al, :c_EntryCatOrder_al, :c_EntryCatName_at, :c_EntryCatFilter_at;
+End SQL
+
+// Close external database.
+$error_l:=EXT_Close 
+End if 
+
+$0:=$error_l

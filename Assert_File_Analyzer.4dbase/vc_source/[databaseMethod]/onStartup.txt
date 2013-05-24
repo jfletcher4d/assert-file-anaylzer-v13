@@ -1,0 +1,16 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+UTIL_ERR_Startup 
+PROG_OnStartup 
+EXT_OnStartup 
+
+PROGMAN_Start 
+
+C_TEXT(<>ASSERT_SessionsRoot_t)
+
+<>ASSERT_SessionsRoot_t:=UTIL_FILE_GetParent (Data file)+"session_charts"+Folder separator 
+
+If (Test path name(<>ASSERT_SESSIONSROOT_T)#Is a folder )
+CREATE FOLDER(<>ASSERT_SESSIONSROOT_T;*)
+// Install required JS files.
+ASSERT_CHART_InstallHighCharts (<>ASSERT_SESSIONSROOT_T)
+End if 

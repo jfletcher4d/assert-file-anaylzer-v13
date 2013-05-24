@@ -1,0 +1,93 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/15/13, 14:15:12
+// ----------------------------------------------------
+// Description:
+//   For every entry in a selection of [ASSERT_Data],
+//   try to categorize the entry based on the rules
+//   defined in [ASSERT_EntryCategory].
+//
+//   These categories are used to create charts.
+//   
+//   Note: you must have an [ASSERT_Session] record
+//   loaded!
+// --[HEADEREND]---------------------------------------
+C_LONGINT($0;$error_l)
+
+C_LONGINT($totalData_l;$currentPos_l;$progThreshold_l;$progID_l;$progPos_l)
+C_LONGINT($totalPatterns_l;$currentPattern_l)
+C_TEXT($progTitle_t;$progMessage_t)
+C_REAL($progress_r)
+C_BOOLEAN($found_f)
+
+ARRAY LONGINT($categoryIDs_al;0)
+ARRAY TEXT($categoryPatterns_at;0)
+
+If (Is record loaded([ASSERT_Session]))
+
+RELATE MANY([ASSERT_Session]SessionID)
+
+If (Records in selection([ASSERT_Data])>0)
+
+$error_l:=ASSERT_EXT_CategoryGetAll (->$categoryIDs_al;->$categoryPatterns_at)
+
+If ($error_l=0)
+
+$totalData_l:=Records in selection([ASSERT_Data])
+$currentPos_l:=1
+
+// Progress bar setup.
+$progThreshold_l:=1000// Only show progress bar if the import will take longer than one second.
+$progTitle_t:="Assigning Known Message Categories"
+$progMessage_t:="log entries"
+$progID_l:=PROG_Create ($progTitle_t;$totalData_l;$progThreshold_l;$currentPos_l;$progress_r;$progMessage_t)
+
+// Loop over each entry.
+While (Not(End selection([ASSERT_Data])))
+
+
+$progress_r:=$currentPos_l/$totalData_l
+
+// This is an optimization; instead of making a precedure call,
+// I update the arrays directly.
+//  PROG_Update ($progID_l;$progress_r;$currentPos_l)
+// Need to locate the position each time because other progress bars could be closed.
+$progPos_l:=Find in array(<>PROG_IDs_al;$progID_l)
+<>PROG_Progress_ar{$progPos_l}:=$progress_r
+<>PROG_Current_al{$progPos_l}:=$currentPos_l
+
+$totalPatterns_l:=Size of array($categoryIDs_al)
+$currentPattern_l:=1
+$found_f:=False
+
+
+// Loop over known categories.
+While (Not($found_f) & ($currentPattern_l<=$totalPatterns_l))
+
+$found_f:=Match regex($categoryPatterns_at{$currentPattern_l};[ASSERT_Data]LogEntryNoLF)
+If ($found_f)
+[ASSERT_Data]_CategoryID:=$categoryIDs_al{$currentPattern_l}
+SAVE RECORD([ASSERT_Data])
+End if 
+
+$currentPattern_l:=$currentPattern_l+1
+
+End while 
+
+
+$currentPos_l:=$currentPos_l+1
+NEXT RECORD([ASSERT_Data])
+
+
+End while 
+
+End if 
+
+End if 
+
+Else 
+$error_l:=<>ERR_ASSERT_NoSession_l
+End if 
+
+$0:=$error_l

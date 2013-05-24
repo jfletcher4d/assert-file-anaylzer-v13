@@ -1,0 +1,25 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): jfletcher
+// Date and time: 03/14/13, 14:37:36
+// ----------------------------------------------------
+// Description:
+//   Mark progress bar to be closed by the manager.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$progressBarID_l)
+
+C_LONGINT($pos_l)
+
+$progressBarID_l:=$1
+
+While (Semaphore(<>PROG_Semaphore_t))
+IDLE
+End while 
+
+$pos_l:=Find in array(<>PROG_IDs_al;$progressBarID_l)
+
+If ($pos_l>-1)
+<>PROG_Close_af{$pos_l}:=True
+End if 
+
+CLEAR SEMAPHORE(<>PROG_Semaphore_t)

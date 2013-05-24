@@ -1,0 +1,81 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 16:32:35
+// ----------------------------------------------------
+// Description:
+//   Manage three form objects on [ASSERT_Session];"User_Input":
+//
+//   -The interval in minutes.
+//   -Button to increase the interval.
+//   -Button to decrease the interval.
+//
+//   The value of the interval is limited to values that
+//   evenly divide into 1 hour; 1, 5, 10, 15, 30, and
+//   60 minutes.
+//
+//   This is a FORM METHOD. As such it relies on form
+//   objects that already exist DO NOT CALL THIS METHOD
+//   ON ITS OWN.
+// --[HEADEREND]---------------------------------------
+C_TEXT($1;$action_t)
+
+$action_t:=$1
+
+// Handle value.
+Case of 
+: ($action_t="increase")
+Case of 
+: (v_intervalInMinutes_l=1)
+v_intervalInMinutes_l:=v_intervalInMinutes_l+4
+: (v_intervalInMinutes_l=5)
+v_intervalInMinutes_l:=v_intervalInMinutes_l+5
+: (v_intervalInMinutes_l=10)
+v_intervalInMinutes_l:=v_intervalInMinutes_l+5
+: (v_intervalInMinutes_l=15)
+v_intervalInMinutes_l:=v_intervalInMinutes_l+15
+: (v_intervalInMinutes_l=30)
+v_intervalInMinutes_l:=v_intervalInMinutes_l+30
+: (v_intervalInMinutes_l=60)
+// Do nothing.
+End case 
+
+
+: ($action_t="decrease")
+Case of 
+: (v_intervalInMinutes_l=1)
+// Do nothing.
+: (v_intervalInMinutes_l=5)
+v_intervalInMinutes_l:=v_intervalInMinutes_l-4
+: (v_intervalInMinutes_l=10)
+v_intervalInMinutes_l:=v_intervalInMinutes_l-5
+: (v_intervalInMinutes_l=15)
+v_intervalInMinutes_l:=v_intervalInMinutes_l-5
+: (v_intervalInMinutes_l=30)
+v_intervalInMinutes_l:=v_intervalInMinutes_l-15
+: (v_intervalInMinutes_l=60)
+v_intervalInMinutes_l:=v_intervalInMinutes_l-30
+End case 
+
+
+End case 
+
+// Update the interval in seconds as well.
+ASSERT_intervalInSeconds_l:=v_intervalInMinutes_l*60
+
+// Handle button state.
+Case of 
+: (v_intervalInMinutes_l=1)
+OBJECT SET ENABLED(b_increaseInterval_l;True)
+OBJECT SET ENABLED(b_decreaseInterval_l;False)
+: (v_intervalInMinutes_l=60)
+OBJECT SET ENABLED(b_increaseInterval_l;False)
+OBJECT SET ENABLED(b_decreaseInterval_l;True)
+Else 
+OBJECT SET ENABLED(b_increaseInterval_l;True)
+OBJECT SET ENABLED(b_decreaseInterval_l;True)
+End case 
+
+// Handle time objects
+TimePicker SET STEP ("v_startTime_h";ASSERT_intervalInSeconds_l)
+TimePicker SET STEP ("v_endTime_h";ASSERT_intervalInSeconds_l)

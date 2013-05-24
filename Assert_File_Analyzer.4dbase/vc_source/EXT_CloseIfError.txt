@@ -1,0 +1,36 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/12/13, 12:41:15
+// ----------------------------------------------------
+// Description:
+//   See: EXT_Close.
+//
+//   This is effectively the same as EXT_Close
+//   with without error handling. The idea is that if
+//   an error occurrs elsewhere in the component, I
+//   still need to close the external database and, at
+//   that point, I don't really care if there is an
+//   error (it will be displayed by 4D anyway).
+// --[HEADEREND]---------------------------------------
+C_LONGINT(EXT_NumConnections_l)
+
+// Only close if there's really a connection open.
+If (EXT_NumConnections_l>0)
+
+// Decrement the counter.
+EXT_NumConnections_l:=EXT_NumConnections_l-1
+
+// If the counter is 0, the connection is truly no
+// longer needed, close it.
+If (EXT_NumConnections_l=0)
+
+// Switch back to internal database.
+Begin SQL
+USE REMOTE DATABASE DEFAULT;
+End SQL
+
+End if 
+
+End if 
+

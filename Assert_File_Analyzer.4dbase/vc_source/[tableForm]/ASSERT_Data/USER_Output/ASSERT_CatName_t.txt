@@ -1,0 +1,9 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+C_LONGINT($formEvent_l;$error_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Display Detail )
+$error_l:=ASSERT_EXT_CategoryGetName ([ASSERT_Data]_CategoryID;Self)
+End case 

@@ -1,0 +1,36 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 10/16/12, 13:18:53
+// ----------------------------------------------------
+// Description:
+//   Initialize PROG module, process arrays if needed.
+// --[HEADEREND]---------------------------------------
+C_BOOLEAN(<>PROG_Initialized_f)// Just a flag to detect if the arrays have been declared.
+C_BOOLEAN(<>PROG_StopManager_f)
+C_TEXT(<>PROG_Semaphore_t)
+
+<>PROG_StopManager_f:=False
+
+<>PROG_Semaphore_t:="PROG_Semaphore"
+
+// Set up arrays.
+If (<>PROG_Initialized_f=False)
+ARRAY LONGINT(<>PROG_PIDs_al;0)// 4D process IDs.
+ARRAY LONGINT(<>PROG_IDs_al;0)// My IDs
+ARRAY LONGINT(<>PROG_4DIDs_al;0)// 4D's IDs
+
+ARRAY TEXT(<>PROG_Title_at;0)
+ARRAY LONGINT(<>PROG_Current_al;0)
+ARRAY LONGINT(<>PROG_Total_al;0)
+
+ARRAY LONGINT(<>PROG_Threshold_al;0)
+ARRAY REAL(<>PROG_Progress_ar;0)
+ARRAY TEXT(<>PROG_Message_at;0)
+
+ARRAY LONGINT(<>PROG_StartTime_al;0)// Time the task started (ms)
+
+ARRAY BOOLEAN(<>PROG_Close_af;0)// Flag to close the progress bar.
+
+<>PROG_Initialized_f:=True
+End if 

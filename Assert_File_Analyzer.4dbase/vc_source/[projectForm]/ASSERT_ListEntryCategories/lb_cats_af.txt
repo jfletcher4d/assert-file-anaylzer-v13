@@ -1,0 +1,26 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:05:26
+// ----------------------------------------------------
+// Description:
+//   This form is used to list category data, which is
+//   stored in an external database.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($formEvent_l)
+
+$formEvent_l:=Form event
+
+Case of 
+
+: ($formEvent_l=On Double Clicked )
+// Note this can also create a new category if no row is selected.
+ASSERT_FORM_EditCategory 
+
+: ($formEvent_l=On Selection Change )
+ASSERT_FORM_SetAddButton 
+
+: ($formEvent_l=On Load )
+ASSERT_FORM_SetAddButton 
+
+End case 

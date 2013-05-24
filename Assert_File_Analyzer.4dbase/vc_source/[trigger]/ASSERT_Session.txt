@@ -1,0 +1,10 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+
+C_LONGINT($dbEvent_l)
+
+$dbEvent_l:=Trigger event
+
+Case of 
+: ($dbEvent_l=On Deleting Record Event )
+// TODO: delete corresponding report HTML file if it exists.
+End case 

@@ -1,0 +1,18 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+C_LONGINT($formEvent_l)
+
+$formEvent_l:=Form event
+
+Case of 
+: ($formEvent_l=On Clicked )
+EntryCatAction_t:="FIRST"
+CANCEL
+
+: ($formEvent_l=On Load )
+If ((EntryCatID_l#0) & (lb_cats_af#1))
+OBJECT SET ENABLED(Self->;True)
+Else 
+OBJECT SET ENABLED(Self->;False)
+End if 
+
+End case 

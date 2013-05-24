@@ -1,0 +1,18 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 04/05/13, 17:00:53
+// ----------------------------------------------------
+// Description:
+//   Method called by menu to import an assert file.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($stack_l;$PID_l)
+C_TEXT($methodName_t;$processName_t)
+
+$stack_l:=1024*1024
+$methodName_t:="ASSERT_P_New"
+$processName_t:=$methodName_t+" process"
+
+$PID_l:=New process($methodName_t;$stack_l;$processName_t;*)
+
+BRING TO FRONT($PID_l)

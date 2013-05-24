@@ -1,0 +1,39 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): Joshua Fletcher
+// Date and time: 03/20/13, 15:35:03
+// ----------------------------------------------------
+// Description:
+//   Delete an entry category for ASSERT_EntryCategory.
+// --[HEADEREND]---------------------------------------
+C_LONGINT($1;$catID_l)
+
+C_LONGINT($0;$error_l)
+
+$catID_l:=$1
+
+// Open external database.
+$error_l:=EXT_Open 
+
+If ($error_l=0)
+
+UTIL_ERR_HandlerInstall 
+Begin SQL
+DELETE FROM ASSERT_EntryCategory
+WHERE categoryID = :$catID_l;
+End SQL
+$error_l:=UTIL_ERR_HandlerRemove 
+
+If ($error_l=0)
+// Close external database.
+$error_l:=EXT_Close 
+Else 
+UTIL_ERR_ErrorMethod_t:=Current method name
+// Still close the external database if another problem
+// occurred but don't overwrite the error code.
+EXT_CloseIfError 
+End if 
+
+End if 
+
+$0:=$error_l

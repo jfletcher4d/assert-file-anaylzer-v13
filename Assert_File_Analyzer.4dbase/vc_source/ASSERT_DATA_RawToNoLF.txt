@@ -1,0 +1,20 @@
+﻿//%attributes = {"lang":"en"} comment added and reserved by 4D.
+// --[HEADERSTART]-------------------------------------
+// User name (OS): jfletcher
+// Date and time: 03/14/13, 16:24:27
+// ----------------------------------------------------
+// Description:
+//   Remove line endings from log entry.
+//
+//   To be used with Match regex.
+//
+//   THIS METHOD IS NOT USED; as an optimization this
+//   is done inline at import time instead of calling
+//   a subroutine. However you can run this to clean up
+//   a session if needed 
+// --[HEADEREND]---------------------------------------
+RELATE MANY([ASSERT_Session]SessionID)
+
+If (Records in selection([ASSERT_Data])>0)
+APPLY TO SELECTION([ASSERT_Data];[ASSERT_Data]LogEntryNoLF:=Replace string([ASSERT_Data]LogEntryRaw;Char(Line feed );""))
+End if 

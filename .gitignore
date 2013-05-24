@@ -1,0 +1,10 @@
+.svn/
+misc/
+*.bat
+*.lnk
+*.4DLINK
+/Assert_File_Analyzer.4dbase/Logs
+/Assert_File_Analyzer.4dbase/Preferences
+/Assert_File_Analyzer.4dbase/Components/VC_SVN.4dbase
+/Assert_File_Analyzer.4dbase/Components/temporary files
+.DS_Store
